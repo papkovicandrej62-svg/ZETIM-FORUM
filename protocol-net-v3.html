@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROTOCOL // NET v3.0 — Игровая Платформа</title>
+    <style>
+        :root {
+            --bg-main: #06080d;
+            --bg-panel: #0c111b;
+            --bg-card: #111827;
+            --accent: #00f0ff;
+            --accent-dim: rgba(0, 240, 255, 0.14);
+            --success: #00ff66;
+            --warning: #ffb800;
+            --danger: #ff2a5f;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --border: #1e293b;
+            --font-mono: 'Courier New', Courier, monospace;
+            --font-sans: system-ui, -apple-system, sans-serif;
+            --base-size: 15px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: var(--base-size); }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 0%, #10192b 0%, #06080d 75%);
+        }
+
+        header {
+            background: rgba(12, 17, 27, 0.95);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: var(--font-mono);
+            font-size: 1.35rem;
+            font-weight: bold;
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+
+        nav { display: flex; gap: 8px; flex-wrap: wrap; }
+        nav button {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 8px 14px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            transition: 0.2s;
+            position: relative;
+        }
+        nav button:hover, nav button.active {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .badge-count {
+            background: var(--danger);
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-left: 5px;
+            display: none;
+        }
+
+        .user-status {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1220px;
+            width: 100%;
+            margin: 28px auto;
+            padding: 0 20px;
+        }
+
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.25s ease; }
+        .no-anim .section.active { animation: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2 {
+            font-family: var(--font-mono);
+            color: var(--accent);
+            border-left: 3px solid var(--accent);
+            padding-left: 12px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 22px;
+            margin-bottom: 20px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        input, textarea, select {
+            width: 100%;
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 12px;
+            font-family: var(--font-sans);
+            outline: none;
+        }
+        input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+
+        .btn {
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 9px 18px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: 0.2s;
+            display: inline-block;
+        }
+        .btn:hover { background: var(--accent); color: var(--bg-main); }
+        .btn-success { border-color: var(--success); color: var(--success); background: rgba(0,255,102,0.1); }
+        .btn-success:hover { background: var(--success); color: #000; }
+        .btn-danger { border-color: var(--danger); color: var(--danger); background: rgba(255,42,95,0.1); }
+        .btn-danger:hover { background: var(--danger); color: #fff; }
+        .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+
+        .auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+
+        /* Profile */
+        .profile-header {
+            display: flex;
+            gap: 24px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 24px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+        .avatar-box {
+            width: 110px;
+            height: 110px;
+            border: 2px solid var(--accent);
+            background: var(--bg-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            color: var(--accent);
+            font-size: 2rem;
+        }
+        .profile-info { flex: 1; }
+        .profile-name { font-size: 1.7rem; font-weight: bold; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .badge-id {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            background: var(--accent-dim);
+            color: var(--accent);
+            padding: 4px 10px;
+            border: 1px solid var(--accent);
+            cursor: pointer;
+        }
+        .profile-stats {
+            display: flex;
+            gap: 22px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+        .stat-box span { color: var(--accent); font-weight: bold; font-size: 1.05rem; }
+        .profile-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+
+        /* Friends System */
+        .friends-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .friend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-main);
+            margin-bottom: 10px;
+        }
+        .friend-meta { font-family: var(--font-mono); }
+        .friend-id { color: var(--accent); font-size: 0.8rem; }
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            margin-right: 6px;
+        }
+
+        /* Store */
+        .store-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 20px;
+        }
+        .game-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .game-card:hover { border-color: var(--accent); }
+        .game-media { height: 165px; background: #04060a; overflow: hidden; }
+        .game-media img { width: 100%; height: 100%; object-fit: cover; }
+        .game-body { padding: 15px; flex: 1; display: flex; flex-direction: column; }
+        .game-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 4px; }
+        .game-author { font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent); margin-bottom: 10px; }
+        .game-desc { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 15px; flex: 1; }
+        .game-actions { display: flex; gap: 8px; }
+
+        /* Steam-like Settings Layout */
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+        .settings-sidebar {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .settings-tab-btn {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 13px 16px;
+            text-align: left;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .settings-tab-btn:hover, .settings-tab-btn.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-left: 3px solid var(--accent);
+        }
+        .settings-pane { display: none; }
+        .settings-pane.active { display: block; }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+            gap: 20px;
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-info h4 { font-size: 0.95rem; margin-bottom: 4px; }
+        .setting-info p { font-size: 0.82rem; color: var(--text-muted); }
+        .setting-control { min-width: 210px; text-align: right; }
+
+        /* Bot Terminal */
+        .bot-terminal {
+            background: #030508;
+            border: 1px solid var(--accent);
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            padding: 14px;
+            height: 200px;
+            overflow-y: auto;
+            color: #a3e635;
+            margin-top: 18px;
+        }
+        .bot-line { margin-bottom: 6px; line-height: 1.4; }
+        .bot-sys { color: var(--accent); }
+        .bot-warn { color: var(--warning); }
+
+        /* Community */
+        .post { border-bottom: 1px solid var(--border); padding: 14px 0; }
+        .post:last-child { border-bottom: none; }
+        .post-meta { font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent); margin-bottom: 5px; }
+
+        @media (max-width: 820px) {
+            .auth-grid, .profile-grid, .friends-grid, .settings-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">PROTOCOL // NET</div>
+    <nav>
+        <button class="active" onclick="switchTab('store', this)" data-i18n="nav_store">Магазин</button>
+        <button onclick="switchTab('editor', this)" data-i18n="nav_editor">Редактор Игр</button>
+        <button onclick="switchTab('friends', this)">
+            <span data-i18n="nav_friends">Друзья</span>
+            <span id="reqBadge" class="badge-count">0</span>
+        </button>
+        <button onclick="switchTab('community', this)" data-i18n="nav_community">Комьюнити</button>
+        <button onclick="switchTab('profile', this)" data-i18n="nav_profile">Профиль</button>
+        <button onclick="switchTab('settings', this)" data-i18n="nav_settings">Настройки</button>
+    </nav>
+    <div class="user-status" id="headerStatus"></div>
+</header>
+
+<main>
+    <!-- АВТОРИЗАЦИЯ -->
+    <section id="auth" class="section">
+        <h2 data-i18n="auth_title">Идентификация в Протоколе</h2>
+        <div class="auth-grid">
+            <div class="panel">
+                <h3 style="font-family: var(--font-mono); margin-bottom: 15px; color: var(--accent);">// ВХОД В СИСТЕМУ</h3>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>ЛОГИН ИЛИ ID ОПЕРАТОРА (PRT-XXXXXX)</label>
+                        <input type="text" id="loginInput" required placeholder="Введите логин или ID...">
+                    </div>
+                    <div class="form-group">
+                        <label>ПАРОЛЬ ДОСТУПА</label>
+                        <input type="password" id="loginPass" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn">Авторизоваться</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3 style="font-family: var(--font-mono); margin-bottom: 15px; color: var(--accent);">// РЕГИСТРАЦИЯ НОВОГО УЗЛА</h3>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>ВАШ ЛОГИН (ПОЗЫВНОЙ)</label>
+                        <input type="text" id="regLogin" required placeholder="Придумайте позывной...">
+                    </div>
+                    <div class="form-group">
+                        <label>ЭЛЕКТРОННАЯ ПОЧТА (EMAIL)</label>
+                        <input type="email" id="regEmail" required placeholder="user@domain.com">
+                    </div>
+                    <div class="form-group">
+                        <label>ПАРОЛЬ</label>
+                        <input type="password" id="regPass" required placeholder="Минимум 6 символов">
+                    </div>
+                    <button type="submit" class="btn">Запросить ID у Бота</button>
+                </form>
+            </div>
+        </div>
+        <div class="bot-terminal" id="authBotLog">
+            <div class="bot-line bot-sys">[SYS_BOT]: Почтовый шлюз привязан к администратору: papkovicandrej62@gmail.com</div>
+        </div>
+    </section>
+
+    <!-- МАГАЗИН -->
+    <section id="store" class="section active">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin-bottom: 0;" data-i18n="store_title">Реестр Игр Протокола</h2>
+            <button class="btn" onclick="switchTab('editor', null)">+ Загрузить свою игру</button>
+        </div>
+        <div id="emptyStoreMessage" class="panel" style="text-align: center; padding: 45px 20px;">
+            <p style="font-family: var(--font-mono); color: var(--text-muted); font-size: 1.05rem; margin-bottom: 12px;">[БАЗА ДАННЫХ МАГАЗИНА ПУСТА]</p>
+            <p style="color: var(--text-muted); margin-bottom: 18px;">Стандартные игры удалены. Каталог формируется исключительно самими игроками.</p>
+            <button class="btn" onclick="switchTab('editor', null)">Перейти в Редактор Игр</button>
+        </div>
+        <div class="store-grid" id="storeGrid"></div>
+    </section>
+
+    <!-- РЕДАКТОР ИГР -->
+    <section id="editor" class="section">
+        <h2 data-i18n="editor_title">Терминал Публикации Игр</h2>
+        <div class="panel">
+            <form onsubmit="handleGameUpload(event)">
+                <div class="form-group">
+                    <label>НАЗВАНИЕ ПРОЕКТА</label>
+                    <input type="text" id="gameTitle" required placeholder="Например: Cyber Protocol 2099">
+                </div>
+                <div class="form-group">
+                    <label>ОПИСАНИЕ ИГРЫ</label>
+                    <textarea id="gameDesc" rows="3" required placeholder="Краткая сводка о геймплее и жанре..."></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                    <div class="form-group">
+                        <label>1. ФАЙЛ ИГРЫ (.EXE, .ZIP, .HTML)</label>
+                        <input type="file" id="gameFile" required>
+                    </div>
+                    <div class="form-group">
+                        <label>2. ИКОНКА / ОБЛОЖКА (.PNG, .JPG)</label>
+                        <input type="file" id="gameIcon" accept="image/*" required>
+                    </div>
+                    <div class="form-group">
+                        <label>3. ТРЕЙЛЕР (.MP4, .WEBM)</label>
+                        <input type="file" id="gameTrailer" accept="video/*">
+                    </div>
+                </div>
+                <button type="submit" class="btn">Передать пакет Боту на компиляцию</button>
+            </form>
+        </div>
+        <div class="bot-terminal" id="editorBotLog">
+            <div class="bot-line bot-sys">[BUILD_BOT]: Модуль интеграции готов. Ожидание файлов...</div>
+        </div>
+    </section>
+
+    <!-- ДРУЗЬЯ ПО ID -->
+    <section id="friends" class="section">
+        <h2 data-i18n="friends_title">Реестр Контактов по ID</h2>
+        <div id="friendsAuthWall" class="panel" style="display:none; text-align:center;">
+            <p style="margin-bottom: 15px;">Для добавления и принятия друзей по ID необходимо авторизоваться.</p>
+            <button class="btn" onclick="switchTab('auth', null)">Войти в систему</button>
+        </div>
+
+        <div id="friendsWorkspace">
+            <div class="panel">
+                <h3 style="font-family: var(--font-mono); color: var(--accent); margin-bottom: 12px;">// ДОБАВИТЬ В ДРУЗЬЯ ПО ID</h3>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <input type="text" id="friendIdInput" placeholder="Введите ID игрока (например: PRT-482910)" style="flex: 1; min-width: 240px;">
+                    <button class="btn" onclick="sendFriendRequest()">Отправить запрос</button>
+                </div>
+                <p id="myIdHint" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;"></p>
+            </div>
+
+            <div class="friends-grid">
+                <div class="panel">
+                    <h3 style="font-family: var(--font-mono); color: var(--warning); margin-bottom: 14px;">// ВХОДЯЩИЕ ЗАЯВКИ В ДРУЗЬЯ</h3>
+                    <div id="incomingRequestsList"></div>
+                </div>
+
+                <div class="panel">
+                    <h3 style="font-family: var(--font-mono); color: var(--success); margin-bottom: 14px;">// ВАШ СПИСОК ДРУЗЕЙ</h3>
+                    <div id="friendsListContainer"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- КОМЬЮНИТИ -->
+    <section id="community" class="section">
+        <h2 data-i18n="comm_title">Комьюнити Протокола</h2>
+        <div class="panel">
+            <div class="form-group">
+                <label>НОВАЯ ТРАНСЛЯЦИЯ В ОБЩИЙ КАНАЛ</label>
+                <textarea id="commInput" rows="2" placeholder="Поделитесь новостями, найдите напарников по ID или обсудите релизы..."></textarea>
+            </div>
+            <button class="btn" onclick="addCommunityPost()">Отправить в сеть</button>
+        </div>
+        <div class="panel" id="communityFeed"></div>
+    </section>
+
+    <!-- ПРОФИЛЬ -->
+    <section id="profile" class="section">
+        <h2 data-i18n="prof_title">Личное Дело Оператора</h2>
+        <div id="profileContent"></div>
+    </section>
+
+    <!-- НАСТРОЙКИ КАК В STEAM -->
+    <section id="settings" class="section">
+        <h2 data-i18n="sett_title">Конфигурация Системы (Steam-Core)</h2>
+        <div class="settings-layout">
+            <div class="settings-sidebar">
+                <button class="settings-tab-btn active" onclick="switchSettingsPane('s_account', this)">1. Аккаунт и Профиль</button>
+                <button class="settings-tab-btn" onclick="switchSettingsPane('s_interface', this)">2. Интерфейс и Язык</button>
+                <button class="settings-tab-btn" onclick="switchSettingsPane('s_privacy', this)">3. Приватность</button>
+                <button class="settings-tab-btn" onclick="switchSettingsPane('s_friends', this)">4. Друзья и Чат</button>
+                <button class="settings-tab-btn" onclick="switchSettingsPane('s_audio', this)">5. Уведомления и Звук</button>
+                <button class="settings-tab-btn" onclick="switchSettingsPane('s_downloads', this)">6. Загрузки и Кэш</button>
+                <button class="settings-tab-btn" onclick="switchSettingsPane('s_gateway', this)">7. Почтовый Шлюз Бота</button>
+            </div>
+
+            <div class="panel" style="margin-bottom: 0;">
+                <!-- 1. Аккаунт -->
+                <div id="s_account" class="settings-pane active">
+                    <h3 style="font-family: var(--font-mono); color: var(--accent); margin-bottom: 15px;">// АККАУНТ И БЕЗОПАСНОСТЬ</h3>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Отображаемый позывной</h4>
+                            <p>Имя, которое видят другие операторы в комьюнити и списке друзей.</p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" id="setNickInput" placeholder="Новый никнейм">
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Статус / Биография профиля</h4>
+                            <p>Краткое описание в шапке вашего личного дела.</p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" id="setBioInput" placeholder="Описание узла...">
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Запоминать сессию на этом устройстве</h4>
+                            <p>Не требовать повторный ввод пароля при перезагрузке страницы.</p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="setRemember">
+                                <option value="true">Включено</option>
+                                <option value="false">Отключено</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="btn" onclick="saveAccountSettings()">Применить изменения аккаунта</button>
+                    </div>
+                </div>
+
+                <!-- 2. Интерфейс -->
+                <div id="s_interface" class="settings-pane">
+                    <h3 style="font-family: var(--font-mono); color: var(--accent); margin-bottom: 15px;">// ИНТЕРФЕЙС И ЛОКАЛИЗАЦИЯ</h3>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Язык интерфейса платформы</h4>
+                            <p>Переключение системных разделов (RU / EN).</p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="langSelect" onchange="changeLanguage(this.value)">
+                                <option value="ru">Русский (RU-BY)</option>
+                                <option value="en">English (EN-US)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Цветовой протокол терминала</h4>
+                            <p>Основной акцентный цвет подсветки и рамок.</p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="accentSelect" onchange="changeAccent(this.value)">
+                                <option value="#00f0ff">Кибер-Циан (Стандарт)</option>
+                                <option value="#00ff66">Матричный Зеленый</option>
+                                <option value="#ffb800">Янтарный Сигнал</option>
+                                <option value="#ff2a5f">Красный Код</option>
+                                <option value="#b829ff">Ультрафиолет</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Масштаб шрифта</h4>
+                            <p>Размер текста во всех окнах терминала.</p>
+                        </div>
+                        <div class="setting-control">
+                            <select onchange="document.documentElement.style.setProperty('--base-size', this.value)">
+                                <option value="13px">Компактный (85%)</option>
+                                <option value="15px" selected>Стандартный (100%)</option>
+                                <option value="17px">Крупный (115%)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Плавные анимации переходов</h4>
+                            <p>Отключите для максимальной скорости отклика.</p>
+                        </div>
+                        <div class="setting-control">
+                            <select onchange="document.body.classList.toggle('no-anim', this.value === 'off')">
+                                <option value="on">Включены</option>
+                                <option value="off">Отключены</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Приватность -->
+                <div id="s_privacy" class="settings-pane">
+                    <h3 style="font-family: var(--font-mono); color: var(--accent); margin-bottom: 15px;">// ПРИВАТНОСТЬ ПРОФИЛЯ</h3>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Доступ к личному делу</h4>
+                            <p>Кто может просматривать вашу статистику и ID.</p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="privProfile">
+                                <option value="public">Открытый (Все узлы)</option>
+                                <option value="friends">Только друзья</option>
+                                <option value="private">Скрытый (Только вы)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Прием заявок в друзья по ID</h4>
+                            <p>Разрешить другим игрокам отправлять вам запросы.</p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="privFriendReq">
+                                <option value="allow">Разрешено всем</option>
+                                <option value="deny">Заблокировать входящие</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Скрывать Email в профиле</h4>
+                            <p>Маскировать адрес электронной почты звездочками.</p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="privEmail">
+                                <option value="hide">Скрывать (Рекомендуется)</option>
+                                <option value="show">Показывать</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Друзья и Чат -->
+                <div id="s_friends" class="settings-pane">
+                    <h3 style="font-family: var(--font-mono); color: var(--accent); margin-bottom: 15px;">// ДРУЗЬЯ И КОМЬЮНИТИ</h3>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Автоматический статус при входе</h4>
+                            <p>Состояние вашего узла в списке контактов друзей.</p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="friendStatusSet">
+                                <option value="online">В сети</option>
+                                <option value="busy">Не беспокоить</option>
+                                <option value="invisible">Невидимка</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Фильтр нецензурной лексики</h4>
+                            <p>Автоматически скрывать запрещенные слова в ленте комьюнити.</p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="profanityFilter">
+                                <option value="on">Включен</option>
+                                <option value="off">Отключен</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Уведомления -->
+                <div id="s_audio" class="settings-pane">
+                    <h3 style="font-family: var(--font-mono); color: var(--accent); margin-bottom: 15px;">// ЗВУКОВЫЕ СИГНАЛЫ ТЕРМИНАЛА</h3>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Звуковой отклик при действиях бота</h4>
+                            <p>Синтезированный сигнал при регистрации, заявке в друзья или загрузке игры.</p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="soundEffects">
+                                <option value="on">Включен</option>
+                                <option value="off">Без звука</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="btn btn-sm" onclick="playBeep(660, 0.15)">Проверить звук</button>
+                    </div>
+                </div>
+
+                <!-- 6. Загрузки и Кэш -->
+                <div id="s_downloads" class="settings-pane">
+                    <h3 style="font-family: var(--font-mono); color: var(--accent); margin-bottom: 15px;">// ЗАГРУЗКИ И ЛОКАЛЬНОЕ ЯДРО</h3>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Региональный узел маршрутизации</h4>
+                            <p>Выбор ближайшего ретранслятора пакетов.</p>
+                        </div>
+                        <div class="setting-control">
+                            <select>
+                                <option>BY-MINSK-01 (Минск)</option>
+                                <option>RU-MSK-02 (Москва)</option>
+                                <option>EU-WAW-01 (Варшава)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <h4>Полный сброс локальной базы данных</h4>
+                            <p>Удалить все аккаунты, списки друзей и загруженные игры из браузера.</p>
+                        </div>
+                        <div class="setting-control">
+                            <button class="btn btn-danger btn-sm" onclick="resetSystem()">Очистить базу</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. Почтовый шлюз -->
+                <div id="s_gateway" class="settings-pane">
+                    <h3 style="font-family: var(--font-mono); color: var(--accent); margin-bottom: 15px;">// ПОЧТОВЫЙ ШЛЮЗ БОТА (ADMIN MAIL)</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+                        Целевой адрес администратора: <strong style="color:var(--accent)">papkovicandrej62@gmail.com</strong>.<br>
+                        Чтобы бот отправлял ID игроков скрытно в фоне без открытия почтовой программы, вставьте бесплатный Access Key с сайта <strong>web3forms.com</strong>.
+                    </p>
+                    <div class="form-group">
+                        <label>WEB3FORMS ACCESS KEY (НЕОБЯЗАТЕЛЬНО)</label>
+                        <input type="text" id="web3KeyInput" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                    </div>
+                    <button class="btn" onclick="saveGatewayKey()">Сохранить ключ шлюза</button>
+                    <button class="btn btn-sm" style="margin-left: 10px;" onclick="testGatewayMail()">Тестовая отправка</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    // Базы данных в localStorage
+    let currentUser = JSON.parse(localStorage.getItem('proto_user')) || null;
+    let usersDB = JSON.parse(localStorage.getItem('proto_users_db')) || [];
+    let gamesDB = JSON.parse(localStorage.getItem('proto_games_db')) || [];
+    let postsDB = JSON.parse(localStorage.getItem('proto_posts_db')) || [];
+    let web3Key = localStorage.getItem('proto_web3_key') || '';
+
+    // Звуковой генератор терминала
+    function playBeep(freq = 520, duration = 0.1) {
+        if (document.getElementById('soundEffects')?.value === 'off') return;
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + duration);
+        } catch (e) {}
+    }
+
+    // Локализация
+    const i18n = {
+        ru: {
+            nav_store: "Магазин", nav_editor: "Редактор Игр", nav_friends: "Друзья",
+            nav_community: "Комьюнити", nav_profile: "Профиль", nav_settings: "Настройки",
+            auth_title: "Идентификация в Протоколе", store_title: "Реестр Игр Протокола",
+            editor_title: "Терминал Публикации Игр", friends_title: "Реестр Контактов по ID",
+            comm_title: "Комьюнити Протокола", prof_title: "Личное Дело Оператора",
+            sett_title: "Конфигурация Системы (Steam-Core)"
+        },
+        en: {
+            nav_store: "Store", nav_editor: "Game Editor", nav_friends: "Friends",
+            nav_community: "Community", nav_profile: "Profile", nav_settings: "Settings",
+            auth_title: "Protocol Identification", store_title: "Protocol Game Registry",
+            editor_title: "Game Publishing Terminal", friends_title: "ID Contact Registry",
+            comm_title: "Protocol Community", prof_title: "Operator Dossier",
+            sett_title: "System Configuration (Steam-Core)"
+        }
+    };
+
+    function changeLanguage(lang) {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (i18n[lang][key]) el.innerText = i18n[lang][key];
+        });
+    }
+
+    function changeAccent(color) {
+        document.documentElement.style.setProperty('--accent', color);
+    }
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if (btn) {
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        if (tabId === 'profile') renderProfile();
+        if (tabId === 'store') renderStore();
+        if (tabId === 'friends') renderFriends();
+        if (tabId === 'settings') loadSettingsUI();
+    }
+
+    function switchSettingsPane(paneId, btn) {
+        document.querySelectorAll('.settings-pane').forEach(p => p.classList.remove('active'));
+        document.getElementById(paneId).classList.add('active');
+        document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function logToBot(elementId, text, type = '') {
+        const terminal = document.getElementById(elementId);
+        const line = document.createElement('div');
+        line.className = `bot-line ${type}`;
+        line.innerHTML = `[${new Date().toLocaleTimeString()}] ${text}`;
+        terminal.appendChild(line);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function syncUserDB() {
+        if (!currentUser) return;
+        const idx = usersDB.findIndex(u => u.id === currentUser.id);
+        if (idx !== -1) usersDB[idx] = currentUser;
+        localStorage.setItem('proto_users_db', JSON.stringify(usersDB));
+        localStorage.setItem('proto_user', JSON.stringify(currentUser));
+        updateHeader();
+    }
+
+    // Отправка письма ботом
+    async function dispatchBotEmail(subject, messageBody, logElementId) {
+        if (web3Key) {
+            try {
+                const res = await fetch("https://api.web3forms.com/submit", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", Accept: "application/json" },
+                    body: JSON.stringify({
+                        access_key: web3Key,
+                        subject: subject,
+                        from_name: "PROTOCOL // SYS_BOT",
+                        message: messageBody
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    logToBot(logElementId, `[MAIL_BOT]: Данные успешно доставлены на papkovicandrej62@gmail.com в фоновом режиме!`, 'bot-sys');
+                    return;
+                }
+            } catch (err) {
+                logToBot(logElementId, `[MAIL_BOT]: Ошибка API шлюза. Переключение на резервный канал...`, 'bot-warn');
+            }
+        }
+        const mailtoUrl = `mailto:papkovicandrej62@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(messageBody)}`;
+        logToBot(logElementId, `[MAIL_BOT]: Ключ API не задан. <a href="${mailtoUrl}" style="color: #00f0ff; text-decoration: underline;">[НАЖМИТЕ ДЛЯ ОТПРАВКИ НА PAPKOVICANDREJ62@GMAIL.COM]</a>`, 'bot-warn');
+    }
+
+    // Регистрация
+    function handleRegister(e) {
+        e.preventDefault();
+        const login = document.getElementById('regLogin').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const pass = document.getElementById('regPass').value;
+
+        if (usersDB.some(u => u.login.toLowerCase() === login.toLowerCase())) {
+            logToBot('authBotLog', `[ERROR]: Позывной "${login}" уже занят.`, 'bot-warn');
+            return;
+        }
+
+        const playerID = `PRT-${Math.floor(100000 + Math.random() * 900000)}`;
+        const newUser = {
+            id: playerID,
+            login: login,
+            email: email,
+            pass: pass,
+            level: 1,
+            bio: "Оператор сети PROTOCOL // NET. Статус: Активен.",
+            regDate: new Date().toLocaleDateString(),
+            friends: [],
+            incomingRequests: [],
+            outgoingRequests: []
+        };
+
+        usersDB.push(newUser);
+        currentUser = newUser;
+        syncUserDB();
+        playBeep(680, 0.15);
+
+        logToBot('authBotLog', `[SYS_BOT]: Игрок <b>${login}</b> зарегистрирован. Присвоен ID: <b>${playerID}</b>`, 'bot-sys');
+        const msg = `Регистрация нового игрока в PROTOCOL // NET:
+Логин: ${login}
+ID игрока: ${playerID}
+Email: ${email}
+Дата: ${new Date().toLocaleString()}`;
+        dispatchBotEmail(`Новый игрок PROTOCOL: ${login} [${playerID}]`, msg, 'authBotLog');
+    }
+
+    // Вход
+    function handleLogin(e) {
+        e.preventDefault();
+        const login = document.getElementById('loginInput').value.trim();
+        const pass = document.getElementById('loginPass').value;
+
+        const found = usersDB.find(u => (u.login.toLowerCase() === login.toLowerCase() || u.id.toUpperCase() === login.toUpperCase()) && u.pass === pass);
+        if (found) {
+            if (!found.friends) found.friends = [];
+            if (!found.incomingRequests) found.incomingRequests = [];
+            if (!found.outgoingRequests) found.outgoingRequests = [];
+            currentUser = found;
+            syncUserDB();
+            playBeep(600, 0.12);
+            logToBot('authBotLog', `[SYS_BOT]: Доступ разрешен. Добро пожаловать, ${found.login} (${found.id}).`, 'bot-sys');
+            setTimeout(() => switchTab('profile', null), 600);
+        } else {
+            playBeep(220, 0.2);
+            logToBot('authBotLog', `[ERROR]: Неверный логин/ID или пароль.`, 'bot-warn');
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        localStorage.removeItem('proto_user');
+        updateHeader();
+        switchTab('auth', null);
+    }
+
+    function updateHeader() {
+        const statusEl = document.getElementById('headerStatus');
+        const badge = document.getElementById('reqBadge');
+        if (currentUser) {
+            statusEl.innerHTML = `
+                <span style="color: var(--accent);">[${currentUser.id}] ${currentUser.login}</span>
+                <button class="btn btn-danger btn-sm" onclick="logout()">Выход</button>
+            `;
+            const reqCount = (currentUser.incomingRequests || []).length;
+            if (reqCount > 0) {
+                badge.style.display = 'inline-block';
+                badge.innerText = reqCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        } else {
+            statusEl.innerHTML = `
+                <span style="color: var(--warning);">[НЕ АВТОРИЗОВАН]</span>
+                <button class="btn btn-sm" onclick="switchTab('auth', null)">Вход / Регистрация</button>
+            `;
+            badge.style.display = 'none';
+        }
+    }
+
+    // СИСТЕМА ДРУЗЕЙ ПО ID
+    function sendFriendRequest() {
+        if (!currentUser) return;
+        const targetId = document.getElementById('friendIdInput').value.trim().toUpperCase();
+        if (!targetId) return;
+
+        if (targetId === currentUser.id) {
+            alert("Нельзя добавить собственный ID в друзья.");
+            return;
+        }
+
+        const targetUser = usersDB.find(u => u.id === targetId);
+        if (!targetUser) {
+            alert(`ОШИБКА: Узел с ID "${targetId}" не найден в базе данных.`);
+            return;
+        }
+
+        if (!targetUser.incomingRequests) targetUser.incomingRequests = [];
+        if (!targetUser.friends) targetUser.friends = [];
+
+        if (currentUser.friends.includes(targetId)) {
+            alert("Этот игрок уже находится в вашем списке друзей.");
+            return;
+        }
+
+        if (targetUser.incomingRequests.includes(currentUser.id)) {
+            alert("Заявка этому игроку уже отправлена и ожидает подтверждения.");
+            return;
+        }
+
+        // Если встречная заявка уже есть — сразу принимаем
+        if (currentUser.incomingRequests.includes(targetId)) {
+            acceptFriendRequest(targetId);
+            return;
+        }
+
+        targetUser.incomingRequests.push(currentUser.id);
+        if (!currentUser.outgoingRequests) currentUser.outgoingRequests = [];
+        currentUser.outgoingRequests.push(targetId);
+
+        const tIdx = usersDB.findIndex(u => u.id === targetId);
+        usersDB[tIdx] = targetUser;
+        syncUserDB();
+        playBeep(640, 0.12);
+
+        document.getElementById('friendIdInput').value = '';
+        alert(`Заявка в друзья отправлена оператору ${targetUser.login} [${targetId}]!`);
+        renderFriends();
+    }
+
+    function acceptFriendRequest(senderId) {
+        if (!currentUser) return;
+        const senderUser = usersDB.find(u => u.id === senderId);
+
+        currentUser.incomingRequests = currentUser.incomingRequests.filter(id => id !== senderId);
+        if (!currentUser.friends.includes(senderId)) currentUser.friends.push(senderId);
+
+        if (senderUser) {
+            if (!senderUser.friends) senderUser.friends = [];
+            if (!senderUser.friends.includes(currentUser.id)) senderUser.friends.push(currentUser.id);
+            senderUser.outgoingRequests = (senderUser.outgoingRequests || []).filter(id => id !== currentUser.id);
+            const sIdx = usersDB.findIndex(u => u.id === senderId);
+            usersDB[sIdx] = senderUser;
+        }
+
+        syncUserDB();
+        playBeep(760, 0.15);
+        renderFriends();
+    }
+
+    function declineFriendRequest(senderId) {
+        if (!currentUser) return;
+        currentUser.incomingRequests = currentUser.incomingRequests.filter(id => id !== senderId);
+        syncUserDB();
+        renderFriends();
+    }
+
+    function removeFriend(friendId) {
+        if (!currentUser) return;
+        currentUser.friends = currentUser.friends.filter(id => id !== friendId);
+        const fUser = usersDB.find(u => u.id === friendId);
+        if (fUser && fUser.friends) {
+            fUser.friends = fUser.friends.filter(id => id !== currentUser.id);
+            const idx = usersDB.findIndex(u => u.id === friendId);
+            usersDB[idx] = fUser;
+        }
+        syncUserDB();
+        renderFriends();
+    }
+
+    function renderFriends() {
+        const wall = document.getElementById('friendsAuthWall');
+        const workspace = document.getElementById('friendsWorkspace');
+        if (!currentUser) {
+            wall.style.display = 'block';
+            workspace.style.display = 'none';
+            return;
+        }
+        wall.style.display = 'none';
+        workspace.style.display = 'block';
+
+        document.getElementById('myIdHint').innerHTML = `Ваш личный ID для передачи друзьям: <strong style="color:var(--accent)">${currentUser.id}</strong>`;
+
+        // Входящие заявки
+        const incContainer = document.getElementById('incomingRequestsList');
+        const reqs = currentUser.incomingRequests || [];
+        if (reqs.length === 0) {
+            incContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem;">Нет новых заявок в друзья.</p>`;
+        } else {
+            incContainer.innerHTML = reqs.map(id => {
+                const u = usersDB.find(user => user.id === id);
+                const name = u ? u.login : 'Неизвестный узел';
+                return `
+                    <div class="friend-item">
+                        <div class="friend-meta">
+                            <div><strong>${name}</strong></div>
+                            <div class="friend-id">${id}</div>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn btn-success btn-sm" onclick="acceptFriendRequest('${id}')">Принять</button>
+                            <button class="btn btn-danger btn-sm" onclick="declineFriendRequest('${id}')">Отклонить</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Список друзей
+        const frContainer = document.getElementById('friendsListContainer');
+        const friends = currentUser.friends || [];
+        if (friends.length === 0) {
+            frContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem;">Список друзей пуст. Введите ID игрока выше, чтобы отправить запрос.</p>`;
+        } else {
+            frContainer.innerHTML = friends.map(id => {
+                const u = usersDB.find(user => user.id === id);
+                const name = u ? u.login : 'Оператор';
+                return `
+                    <div class="friend-item">
+                        <div class="friend-meta">
+                            <div><span class="status-dot"></span><strong>${name}</strong></div>
+                            <div class="friend-id">${id}</div>
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="removeFriend('${id}')">Удалить</button>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    // Редактор игр
+    function handleGameUpload(e) {
+        e.preventDefault();
+        if (!currentUser) {
+            alert("ОШИБКА: Войдите в систему для публикации игры.");
+            switchTab('auth', null);
+            return;
+        }
+
+        const title = document.getElementById('gameTitle').value.trim();
+        const desc = document.getElementById('gameDesc').value.trim();
+        const gameFile = document.getElementById('gameFile').files[0];
+        const iconFile = document.getElementById('gameIcon').files[0];
+        const trailerFile = document.getElementById('gameTrailer').files[0];
+
+        logToBot('editorBotLog', `[BUILD_BOT]: Прием пакета "${title}" от ${currentUser.login} [${currentUser.id}]...`, 'bot-sys');
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const newGame = {
+                id: 'GAME-' + Math.floor(1000 + Math.random() * 9000),
+                title: title,
+                desc: desc,
+                author: `${currentUser.login} [${currentUser.id}]`,
+                fileName: gameFile.name,
+                downloadUrl: URL.createObjectURL(gameFile),
+                icon: event.target.result,
+                trailer: trailerFile ? URL.createObjectURL(trailerFile) : null
+            };
+
+            gamesDB.push(newGame);
+            try { localStorage.setItem('proto_games_db', JSON.stringify(gamesDB)); } catch (err) {}
+            playBeep(720, 0.15);
+            logToBot('editorBotLog', `[BUILD_BOT]: Игра "${title}" успешно встроена в магазин!`, 'bot-sys');
+            e.target.reset();
+            renderStore();
+        };
+        reader.readAsDataURL(iconFile);
+    }
+
+    function renderStore() {
+        const grid = document.getElementById('storeGrid');
+        const emptyMsg = document.getElementById('emptyStoreMessage');
+        if (gamesDB.length === 0) {
+            emptyMsg.style.display = 'block';
+            grid.innerHTML = '';
+            return;
+        }
+        emptyMsg.style.display = 'none';
+        grid.innerHTML = gamesDB.map(game => `
+            <div class="game-card">
+                <div class="game-media"><img src="${game.icon}" alt="${game.title}"></div>
+                <div class="game-body">
+                    <div class="game-title">${game.title}</div>
+                    <div class="game-author">РАЗРАБОТЧИК: ${game.author}</div>
+                    <div class="game-desc">${game.desc}</div>
+                    <div class="game-actions">
+                        <a href="${game.downloadUrl}" download="${game.fileName}" class="btn btn-sm" style="text-decoration:none; text-align:center; flex:1;">Скачать</a>
+                        ${game.trailer ? `<button class="btn btn-sm" onclick="watchTrailer('${game.trailer}', '${game.title}')">Трейлер</button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function watchTrailer(url, title) {
+        const win = window.open("", "_blank", "width=800,height=500");
+        win.document.write(`<body style="background:#06080d;color:#00f0ff;font-family:monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;"><h3>ТРЕЙЛЕР // ${title}</h3><video src="${url}" controls autoplay style="max-width:90%;max-height:80%;border:1px solid #00f0ff;"></video></body>`);
+    }
+
+    // Профиль
+    function renderProfile() {
+        const container = document.getElementById('profileContent');
+        if (!currentUser) {
+            container.innerHTML = `<div class="panel" style="text-align:center;"><p style="margin-bottom:15px;">Доступ закрыт. Требуется авторизация.</p><button class="btn" onclick="switchTab('auth', null)">Войти</button></div>`;
+            return;
+        }
+        const userGames = gamesDB.filter(g => g.author.includes(currentUser.id));
+        const hideEmail = document.getElementById('privEmail')?.value === 'hide';
+        const displayEmail = hideEmail ? currentUser.email.replace(/(.{2})(.*)(@.*)/, "$1***$3") : currentUser.email;
+
+        container.innerHTML = `
+            <div class="profile-header">
+                <div class="avatar-box">${currentUser.login.substring(0,2).toUpperCase()}</div>
+                <div class="profile-info">
+                    <div class="profile-name">
+                        ${currentUser.login}
+                        <span class="badge-id" title="Нажмите, чтобы скопировать ID" onclick="navigator.clipboard.writeText('${currentUser.id}'); alert('ID ${currentUser.id} скопирован!')">${currentUser.id} 📋</span>
+                    </div>
+                    <p style="color: var(--text-muted); margin-top: 8px;">${currentUser.bio}</p>
+                    <div class="profile-stats">
+                        <div class="stat-box">УРОВЕНЬ: <span>${currentUser.level}</span></div>
+                        <div class="stat-box">ДРУЗЬЯ: <span>${(currentUser.friends || []).length}</span></div>
+                        <div class="stat-box">ИГРЫ: <span>${userGames.length}</span></div>
+                        <div class="stat-box">РЕГИСТРАЦИЯ: <span>${currentUser.regDate}</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-grid">
+                <div class="panel">
+                    <h3 style="font-family: var(--font-mono); color: var(--accent); margin-bottom: 14px;">// ВИТРИНА РАЗРАБОТЧИКА</h3>
+                    ${userGames.length === 0 ? '<p style="color: var(--text-muted);">Нет загруженных игр.</p>' : userGames.map(g => `<div style="padding:10px; border:1px solid var(--border); margin-bottom:8px;"><b>${g.title}</b> (${g.fileName})</div>`).join('')}
+                </div>
+                <div class="panel">
+                    <h3 style="font-family: var(--font-mono); color: var(--accent); margin-bottom: 14px;">// СВОДКА УЗЛА</h3>
+                    <p style="font-family: var(--font-mono); font-size: 0.85rem; margin-bottom: 8px;">Email: <span style="color:var(--text-muted)">${displayEmail}</span></p>
+                    <p style="font-family: var(--font-mono); font-size: 0.85rem; margin-bottom: 8px;">Статус: <span style="color:var(--success)">В СЕТИ</span></p>
+                    <button class="btn btn-sm" style="margin-top:8px;" onclick="switchTab('friends', null)">Управление друзьями</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Комьюнити
+    function addCommunityPost() {
+        const input = document.getElementById('commInput');
+        let text = input.value.trim();
+        if (!text) return;
+        if (document.getElementById('profanityFilter')?.value === 'on') {
+            text = text.replace(/(дурак|идиот|блять|сука|хуй|пизд)/gi, '***');
+        }
+        const author = currentUser ? `${currentUser.login} // ${currentUser.id}` : 'АНОНИМНЫЙ УЗЕЛ';
+        postsDB.unshift({ author, text, time: new Date().toLocaleTimeString() });
+        localStorage.setItem('proto_posts_db', JSON.stringify(postsDB));
+        input.value = '';
+        renderCommunity();
+    }
+
+    function renderCommunity() {
+        const feed = document.getElementById('communityFeed');
+        const postsHtml = postsDB.map(p => `<div class="post"><div class="post-meta">[${p.author}] • ${p.time}</div><div>${p.text}</div></div>`).join('');
+        feed.innerHTML = postsHtml + `<div class="post"><div class="post-meta">[SYSTEM // PRT-000000] • СИСТЕМНОЕ</div><div>Канал комьюнити активен. Фандомы отключены. Делитесь своими ID для добавления в друзья.</div></div>`;
+    }
+
+    // Настройки
+    function loadSettingsUI() {
+        if (currentUser) {
+            document.getElementById('setNickInput').value = currentUser.login;
+            document.getElementById('setBioInput').value = currentUser.bio;
+        }
+        document.getElementById('web3KeyInput').value = web3Key;
+    }
+
+    function saveAccountSettings() {
+        if (!currentUser) { alert("Сначала войдите в аккаунт."); return; }
+        const newNick = document.getElementById('setNickInput').value.trim();
+        const newBio = document.getElementById('setBioInput').value.trim();
+        if (newNick) currentUser.login = newNick;
+        if (newBio) currentUser.bio = newBio;
+        syncUserDB();
+        playBeep(640, 0.1);
+        alert("Настройки профиля сохранены.");
+    }
+
+    function saveGatewayKey() {
+        web3Key = document.getElementById('web3KeyInput').value.trim();
+        localStorage.setItem('proto_web3_key', web3Key);
+        alert("Ключ почтового шлюза сохранен!");
+    }
+
+    function testGatewayMail() {
+        dispatchBotEmail("Тест шлюза PROTOCOL // NET", "Проверка связи с почтой papkovicandrej62@gmail.com.", 'authBotLog');
+        switchTab('auth', null);
+    }
+
+    function resetSystem() {
+        if (confirm("Удалить все локальные аккаунты, друзей и игры?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    // Старт
+    updateHeader();
+    renderStore();
+    renderCommunity();
+</script>
+</body>
+</html>
